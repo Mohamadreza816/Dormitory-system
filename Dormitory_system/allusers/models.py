@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import first
+from room.models import Room
 
 # for std number,personal number and national number
 only_digits = RegexValidator(r'^\d+$', 'این فیلد فقط باید شامل عدد 10 رقمی باشد')
@@ -24,6 +25,12 @@ class CustomUser(AbstractUser):
     is_admin = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
 
+    class Gender(models.TextChoices):
+        MALE = 'M', 'Male',
+        FEMALE = 'F', 'Female'
+        UNSET = 'U', 'Unset'
+
+    user_Gender = models.CharField(max_length=1, choices=Gender.choices, default=Gender.UNSET)
     def set_role(self):
         if self.is_admin:
             self.role = 'admin'
@@ -36,13 +43,8 @@ class CustomUser(AbstractUser):
 
 class Student(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE,default=601)
 
-    class Gender(models.TextChoices):
-        MALE = 'M', 'Male',
-        FEMALE = 'F', 'Female'
-        UNSET = 'U', 'Unset'
-
-    Student_Gender = models.CharField(max_length=1, choices=Gender.choices, default=Gender.UNSET)
     student_number = models.CharField(max_length=10, unique=True, blank=False, null=False
                                       , validators=[only_digits])
     study_field = models.CharField(max_length=30)
