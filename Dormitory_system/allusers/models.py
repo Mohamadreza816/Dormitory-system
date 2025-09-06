@@ -58,4 +58,3 @@ class D_Admin(models.Model):
     level = models.IntegerField()
     personal_number = models.CharField(max_length=10, unique=True, blank=False, null=False
                                        , validators=[only_digits])
-

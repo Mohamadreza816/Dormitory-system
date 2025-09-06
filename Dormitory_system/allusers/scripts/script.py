@@ -2,6 +2,7 @@ import random
 
 from allusers.models import CustomUser
 from ..signals import *
+from wallet.signals import *
 
 
 def run():
