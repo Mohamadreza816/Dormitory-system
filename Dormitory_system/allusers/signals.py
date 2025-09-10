@@ -22,12 +22,13 @@ admin_lev = [
 def create_related_model(sender,instance,created,**kwargs):
     if created:
         if instance.Role.lower() == "admin":
-            D_Admin.objects.create(
+            obj = D_Admin.objects.create(
                 user=instance,
                 level=random.choice(admin_lev),
                 personal_number=str(uuid.uuid4().int)[:10]
             )
-
+            instance.username = obj.personal_number
+            instance.save()
         elif instance.Role.lower() == "student" and instance.user_Gender == "m":
             temp = dormitory.objects.filter(Gender="M")
             empty_room = Room.objects.filter(is_full=False)
@@ -44,12 +45,14 @@ def create_related_model(sender,instance,created,**kwargs):
                 student_room.is_full = True
                 student_room.save()
 
-            Student.objects.create(
+            obj = Student.objects.create(
                 user=instance,
                 room=student_room,
                 student_number=str(uuid.uuid4().int)[:10],
                 study_field=random.choice(study_field)
             )
+            instance.username = obj.student_number
+            instance.save()
         elif instance.Role.lower() == "student" and instance.user_Gender == "f":
             temp = dormitory.objects.filter(Gender="F")
             empty_room = Room.objects.filter(is_full=False)
@@ -66,9 +69,11 @@ def create_related_model(sender,instance,created,**kwargs):
                 student_room.is_full = True
                 student_room.save()
 
-            Student.objects.create(
+            obj = Student.objects.create(
                 user=instance,
                 room=student_room,
                 student_number=str(uuid.uuid4().int)[:10],
                 study_field=random.choice(study_field)
             )
+            instance.username = obj.student_number
+            instance.save()

@@ -14,7 +14,8 @@ class CustomUser(AbstractUser):
         db_table = "allusers_customuser"
     first_name = models.CharField(max_length=150, null=False, blank=False)
     last_name = models.CharField(max_length=150, blank=False, null=False)
-    PhoneNumber = models.CharField(max_length=10, null=False, blank=False)
+    phonenumber = models.CharField(max_length=11, null=False, blank=False,
+                                   validators=[only_digits])
     Role = models.CharField(max_length=10, blank=False, null=False)
     National_number = models.CharField(
         max_length=10,
@@ -50,7 +51,7 @@ class Student(models.Model):
     study_field = models.CharField(max_length=30)
 
     def __str__(self):
-        print(f"stuedent:{self.user.first_name} {self.user.last_name}")
+        return f"student: {self.user.first_name} {self.user.last_name}"
 
 
 class D_Admin(models.Model):

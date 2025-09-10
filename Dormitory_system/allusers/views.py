@@ -2,11 +2,12 @@ from rest_framework.views import APIView
 import jwt
 from .models import CustomUser,D_Admin,Student
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status, generics,permissions
 from django.conf import settings
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from allusers.serializers import UserLoginSerializer,CreateLinkSerializer
+from .serializers import UserLoginSerializer,CreateLinkSerializer,UserEditProfileSerializer,ChangePasswordSerializer
 from drf_spectacular.utils import extend_schema
 from .generate_link import generate
 # Create your views here.
@@ -30,19 +31,12 @@ class UserLoginAPIView(APIView):
     )
     def post(self,request):
         try:
-            username = request.data['username']
-            password = request.data['password']
-            user = CustomUser.objects.get(National_number=password)
-            # check user is stu or admin
-            user_ = 'temp'
-            if user.Role == 'admin':
-                user_ = D_Admin.objects.get(personal_number=username)
-            elif user.Role == 'student':
-                user_ = Student.objects.get(student_number=username)
-            else:
-                return Response({'message':'role undefined'},status=status.HTTP_403_FORBIDDEN)
-
-            if user_ is not None:
+            username = request.data.get('username')
+            password = request.data.get('password')
+            if not username or not password:
+                return Response({'message': 'missing username or password'}, status=status.HTTP_400_BAD_REQUEST)
+            user = authenticate(username=username, password=password)
+            if user is not None:
                 ref = RefreshToken.for_user(user)
                 return Response({
                     'message': 'user login successfully',
@@ -52,13 +46,6 @@ class UserLoginAPIView(APIView):
                 },status=status.HTTP_200_OK)
             else:
                 return Response({'message': 'invalid credentials,user with this username and password dosen\'n exist'},status=status.HTTP_400_BAD_REQUEST)
-        except CustomUser.DoesNotExist:
-            return Response({'message': 'user login failed,password is incorrect'},status=status.HTTP_400_BAD_REQUEST)
-        except Student.DoesNotExist:
-            return Response({'message': 'user login failed,username is incorrect'},status=status.HTTP_400_BAD_REQUEST)
-        except D_Admin.DoesNotExist:
-            return Response({'message': 'user login failed,username is incorrect'},status=status.HTTP_400_BAD_REQUEST)
-
 
 class create_link(APIView):
     serializer_class = CreateLinkSerializer
@@ -75,8 +62,9 @@ class create_link(APIView):
             return Response({'message': 'email is wrong'},status=status.HTTP_400_BAD_REQUEST)
 
 
-class login_link(APIView):
-    def get(self,request):
+class changepassword_link(APIView):
+    serializer_class = ChangePasswordSerializer
+    def put(self,request):
         tk = request.GET.get('token')
         try:
             payload = jwt.decode(tk,settings.SECRET_KEY,algorithms=['HS256'])
@@ -91,8 +79,26 @@ class login_link(APIView):
             user = CustomUser.objects.get(id=payload['user_id'])
         except CustomUser.DoesNotExist:
             return Response({"error": "user dosen\'t exist"}, status=status.HTTP_400_BAD_REQUEST)
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        })
+        serializer = self.serializer_class(instance=user,data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'message':'password changed successfully'},status=status.HTTP_200_OK)
+
+class Editprofile(generics.UpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated,]
+    serializer_class = UserEditProfileSerializer
+    ALLOWED_FIELDS = {'email', 'phonenumber'}
+    def update(self,request,*args,**kwargs):
+        invalid = set(self.request.data.keys()) - self.ALLOWED_FIELDS
+        if invalid:
+            return Response(
+                {"error": f"Invalid fields: {', '.join(invalid)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not request.data:
+            return Response({"error": "missing data"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(instance=request.user,data=request.data,partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({'message': 'User profile updated',"new values":request.data},status=status.HTTP_200_OK)

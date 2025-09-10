@@ -36,7 +36,7 @@ def run():
             first_name=fname[0],
             last_name=lname,
             user_Gender=user_g,
-            PhoneNumber=phone_number,
+            phonenumber=phone_number,
             Role=role,
             National_number=national_number,
             is_student=is_student,
