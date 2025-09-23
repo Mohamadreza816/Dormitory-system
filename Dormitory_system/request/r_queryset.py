@@ -1,0 +1,9 @@
+from django.db import models
+
+class RequestQuerySet(models.QuerySet):
+    def for_user(self,user):
+        if user.Role.lower() == "admin":
+            return self.all()
+        elif user.Role.lower() == "student":
+            return self.filter(student=user.student)
+        return self.none

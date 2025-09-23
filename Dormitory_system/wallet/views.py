@@ -1,6 +1,4 @@
 import uuid
-from dis import print_instructions
-
 from adodbapi.ado_consts import adModeRead
 from django.shortcuts import render
 from rest_framework.response import Response
@@ -11,6 +9,7 @@ from .models import Wallet
 from allusers.models import CustomUser,D_Admin,Student
 from transaction.models import Transaction
 from allusers.permitions import StudentUser,AdminUser
+from logs.models import Logs
 # Create your views here.
 class IncreaseBalanceAPIView(APIView):
     permission_classes = [StudentUser]
@@ -32,7 +31,14 @@ class IncreaseBalanceAPIView(APIView):
             transaction_id=t_id,
         )
         obj.save()
-
+        lg = Logs.objects.create(
+            owner=request.user,
+            role=request.user.Role,
+            action="payment",
+            details="pending for charge balance",
+            value=amount,
+        )
+        lg.save()
         try:
 
             wal = Wallet.objects.get(student=stu)
@@ -42,6 +48,9 @@ class IncreaseBalanceAPIView(APIView):
             # change transaction status
             obj.t_status = 'C'
             obj.save()
+            # update log
+            lg.details="successfully increased balance"
+            lg.save()
             return Response({
                 "message": f"Increased balance",
                 "amount": amount,
@@ -54,6 +63,9 @@ class IncreaseBalanceAPIView(APIView):
         except:
             obj.t_status = 'F'
             obj.save()
+            # update log
+            lg.details="Increased balance failed"
+            lg.save()
             return Response({'message': 'increase balance failed'}, status=status.HTTP_200_OK)
 
 

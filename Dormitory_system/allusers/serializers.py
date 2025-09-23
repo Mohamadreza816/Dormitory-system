@@ -2,8 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from allusers.models import CustomUser
-
+from .models import CustomUser,Student
+from dormitory.models import dormitory
+from room.models import Room
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True,write_only=True)
@@ -40,3 +41,41 @@ class ChangePasswordSerializer(serializers.Serializer):
         instance.set_password(validated_data['new_password'])
         instance.save()
         return instance
+
+class ProfileSerializer(serializers.ModelSerializer):
+    dor_name = serializers.SerializerMethodField()
+    dor_blk = serializers.SerializerMethodField()
+    room_num = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name','last_name','Role','phonenumber','email','National_number','dor_name','dor_blk','room_num']
+
+    def get_dor_name(self,obj):
+        try:
+            user = self.context['request'].user
+            stu = Student.objects.get(user=user)
+            room = stu.room
+            dor = room.dormitory
+            return dor.name
+        except Student.DoesNotExist:
+            return ''
+
+    def get_dor_blk(self,obj):
+        try:
+            user = self.context['request'].user
+            stu = Student.objects.get(user=user)
+            room = stu.room
+            return room.Block_number
+        except Student.DoesNotExist:
+            print("Student does not exist")
+            return ''
+
+    def get_room_num(self,obj):
+        try:
+            user = self.context['request'].user
+            stu = Student.objects.get(user=user)
+            room = stu.room
+            return room.room_number
+        except Student.DoesNotExist:
+            return ''

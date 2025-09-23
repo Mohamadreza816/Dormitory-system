@@ -7,9 +7,12 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from .serializers import UserLoginSerializer,CreateLinkSerializer,UserEditProfileSerializer,ChangePasswordSerializer
+from .serializers import UserLoginSerializer, CreateLinkSerializer, UserEditProfileSerializer, ChangePasswordSerializer, \
+    ProfileSerializer
 from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema,OpenApiResponse,OpenApiTypes,OpenApiRequest,OpenApiExample
 from .generate_link import generate
+from logs.models import Logs
 # Create your views here.
 class UserLoginAPIView(APIView):
     @extend_schema(
@@ -30,22 +33,82 @@ class UserLoginAPIView(APIView):
         }
     )
     def post(self,request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        if not username or not password:
+            return Response({'message': 'missing username or password'}, status=status.HTTP_400_BAD_REQUEST)
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            ref = RefreshToken.for_user(user)
+            # create log
+            lg = Logs.objects.create(
+                owner=user,
+                role="student",
+                action="login",
+                details="User logged in successfully.",
+
+            )
+            lg.save()
+            return Response({
+                'message': 'user login successfully',
+                'Role': user.Role,
+                'refresh': str(ref),
+                'access': str(ref.access_token)
+            },status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'invalid credentials,user with this username and password dosen\'n exist'},status=status.HTTP_400_BAD_REQUEST)
+
+class logout(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        request=OpenApiRequest(
+            {
+                "type": "object",
+                "properties": {
+                    "refresh": {"type": "string"},
+                },
+                "required": ["refresh"],
+            },
+            examples=[
+                OpenApiExample(
+                    'Example',
+                    value={"refresh": "your-refresh-token-here"},
+                    request_only=True
+                )
+            ]
+        ),
+    responses={
+            200 :{
+                "example":{
+                "message":"Successfully logged out"
+            }
+
+        },
+            400:{
+                "description": "Invalid credentials",
+                "example":{
+                    "message": "Invalid credentials",
+                }
+            }
+        }
+    )
+    def post(self, request):
         try:
-            username = request.data.get('username')
-            password = request.data.get('password')
-            if not username or not password:
-                return Response({'message': 'missing username or password'}, status=status.HTTP_400_BAD_REQUEST)
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                ref = RefreshToken.for_user(user)
-                return Response({
-                    'message': 'user login successfully',
-                    'Role': user.Role,
-                    'refresh': str(ref),
-                    'access': str(ref.access_token)
-                },status=status.HTTP_200_OK)
-            else:
-                return Response({'message': 'invalid credentials,user with this username and password dosen\'n exist'},status=status.HTTP_400_BAD_REQUEST)
+            token = RefreshToken(request.data['refresh'])
+            token.blacklist()
+            # create log
+            lg = Logs.objects.create(
+                owner=request.user,
+                role= request.user.Role,
+                action="logout",
+                details="Successfully logged out."
+            )
+            lg.save()
+            return Response({"message": "Successfully logged out."}, status=200)
+        except Exception as e:
+            return Response({"error": 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class create_link(APIView):
     serializer_class = CreateLinkSerializer
@@ -82,6 +145,14 @@ class changepassword_link(APIView):
         serializer = self.serializer_class(instance=user,data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        # create log
+        lg = Logs.objects.create(
+            owner=user,
+            role=user.Role,
+            action="change_password",
+            details="Successfully changed password."
+        )
+        lg.save()
         return Response({'message':'password changed successfully'},status=status.HTTP_200_OK)
 
 class Editprofile(generics.UpdateAPIView):
@@ -101,4 +172,50 @@ class Editprofile(generics.UpdateAPIView):
         serializer = self.get_serializer(instance=request.user,data=request.data,partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        # create log
+        lg = Logs.objects.create(
+            owner=request.user,
+            role=request.user.Role,
+            action="editprofile",
+            details="Successfully edited profile.",
+            value=serializer.data
+        )
         return Response({'message': 'User profile updated',"new values":request.data},status=status.HTTP_200_OK)
+
+class profile_detail(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated,]
+    serializer_class = ProfileSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def retrieve(self,request,*args,**kwargs):
+        obj = self.get_object()
+        serializer = self.get_serializer(instance=obj,context={'request':request})
+        return Response(serializer.data)
+
+class RefreshAPIView(APIView):
+    @extend_schema(
+        responses={
+            200: {
+                "description": "new access token",
+                "example": {
+                    "message": "new access token generated.",
+                    "access": "your-access-token-here"
+                }
+            },
+            400: {
+                "description": "Invalid credentials"
+            }
+        }
+    )
+    def post(self,request):
+        try:
+            refresh_token = request.data.get('refresh_token')
+            if not refresh_token:
+                return Response({"error": "missing refresh token"}, status=status.HTTP_400_BAD_REQUEST)
+            refresh = RefreshToken(refresh_token)
+            new_access_token = str(refresh.access_token)
+            return Response({'access_token': new_access_token},status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": "Invalid refresh token"}, status=400)

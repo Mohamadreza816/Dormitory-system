@@ -12,7 +12,7 @@ class StudentUser(BasePermission):
             stu = Student.objects.get(user=user)
             return True
         except Student.DoesNotExist:
-            self.message = "This User dosen't exist"
+            self.message = "This User is not a student"
             return False
 
 # check for admin user
