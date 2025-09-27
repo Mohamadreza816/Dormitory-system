@@ -20,9 +20,19 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id','first_name','last_name','Role']
 
 class UserEditProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(allow_blank=False)
     class Meta:
         model = CustomUser
         fields = ['email','phonenumber']
+
+        def validate_phonenumber(self, value):
+            if value in [None,""]:
+                raise serializers.ValidationError("Invalid phone number")
+            return value
+        def validate_email(self, value):
+            if value in [None,'']:
+                raise serializers.ValidationError("Invalid email")
+            return value
 
 class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True,write_only=True)

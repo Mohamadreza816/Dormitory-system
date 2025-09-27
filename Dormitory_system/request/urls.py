@@ -7,5 +7,5 @@ urlpatterns = [
     path('list/', RequestList.as_view()),
     path('delete/<int:pk>/', RequestDelete.as_view()),
     path('update/<int:pk>/', RequestUpdate.as_view()),
-    path('filter/<str:f_type>/>', RequestFilter.as_view()),
+    path('filter/<str:f_type>/', RequestFilter.as_view()),
 ]

@@ -26,7 +26,7 @@ class RequestSerializer(serializers.ModelSerializer):
         return data
 
     def validate_is_priorty(self,data):
-        cost = 30000
+        cost = 3000
         obj = ...
         if data in [None,"",False]:
             return False
@@ -46,7 +46,7 @@ class RequestSerializer(serializers.ModelSerializer):
             owner=user,
             role=user.Role,
             action="payment",
-            details="pending for priority",
+            detail="pending for priority",
             value=cost
         )
         lg.save()
@@ -56,20 +56,20 @@ class RequestSerializer(serializers.ModelSerializer):
                 obj.t_status = 'F'
                 obj.save()
                 # update log
-                lg.details="faild"
+                lg.detail="faild"
                 lg.save()
-                raise serializers.ValidationError({"is_priorty":"this wallet balance is too low"})
+                raise serializers.ValidationError({"is_priority":"this wallet balance is too low"})
 
             wal.balance = wal.balance - cost
             wal.save()
             obj.t_status = 'C'
             obj.save()
             #update log
-            lg.details="successfully paid"
+            lg.detail="successfully paid"
             lg.save()
             return data
         except Wallet.DoesNotExist:
-            raise serializers.ValidationError({"is_priorty":"this user does not exist"})
+            raise serializers.ValidationError({"is_priority":"this user does not exist"})
 
         return data
 

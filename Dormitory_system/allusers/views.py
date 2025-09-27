@@ -29,15 +29,25 @@ class UserLoginAPIView(APIView):
                 "example": {
                     "message": "Invalid credentials",
                 }
+            },
+            401:{
+                "description":"user not found",
+                "example": {
+                    "message": "invalid credentials,user with this username and password dosen\'n exist",
+                }
             }
         }
     )
     def post(self,request):
         username = request.data.get('username')
         password = request.data.get('password')
-        if not username or not password:
-            return Response({'message': 'missing username or password'}, status=status.HTTP_400_BAD_REQUEST)
+        if not username:
+            return Response({'message': 'missing username'}, status=status.HTTP_400_BAD_REQUEST)
+        if not password:
+            return Response({'message': 'missing password'}, status=status.HTTP_400_BAD_REQUEST)
+        # find user
         user = authenticate(username=username, password=password)
+        # generate access and refresh token
         if user is not None:
             ref = RefreshToken.for_user(user)
             # create log
@@ -45,7 +55,7 @@ class UserLoginAPIView(APIView):
                 owner=user,
                 role="student",
                 action="login",
-                details="User logged in successfully.",
+                detail="User logged in successfully.",
 
             )
             lg.save()
@@ -56,7 +66,7 @@ class UserLoginAPIView(APIView):
                 'access': str(ref.access_token)
             },status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'invalid credentials,user with this username and password dosen\'n exist'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'invalid credentials,user with this username and password dosen\'n exist'},status=status.HTTP_404_NOT_FOUND)
 
 class logout(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -78,7 +88,7 @@ class logout(APIView):
                 )
             ]
         ),
-    responses={
+        responses={
             200 :{
                 "example":{
                 "message":"Successfully logged out"
@@ -96,13 +106,16 @@ class logout(APIView):
     def post(self, request):
         try:
             token = RefreshToken(request.data['refresh'])
+            if not token:
+                return Response({'message': 'refresh is required'}, status=status.HTTP_400_BAD_REQUEST)
+            # block refresh token
             token.blacklist()
             # create log
             lg = Logs.objects.create(
                 owner=request.user,
                 role= request.user.Role,
                 action="logout",
-                details="Successfully logged out."
+                detail="Successfully logged out."
             )
             lg.save()
             return Response({"message": "Successfully logged out."}, status=200)
@@ -111,7 +124,25 @@ class logout(APIView):
 
 
 class create_link(APIView):
+
     serializer_class = CreateLinkSerializer
+    @extend_schema(
+        request=CreateLinkSerializer,
+        responses={
+            200:{
+                "description": "Link created successfully, send email",
+                "example": {
+                    "message": "email sent successfully",
+                }
+            },
+            400:{
+                "description": "Invalid credentials",
+                "example": {
+                    "message": "email is not correct",
+                }
+            }
+        }
+    )
     def post(self,request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -122,11 +153,36 @@ class create_link(APIView):
             generate.send_email(tk,user)
             return Response({'message':'Email send'},status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
-            return Response({'message': 'email is wrong'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'email is not correct'},status=status.HTTP_400_BAD_REQUEST)
 
 
 class changepassword_link(APIView):
     serializer_class = ChangePasswordSerializer
+
+    @extend_schema(
+        request=ChangePasswordSerializer,
+        responses={
+            200:{
+                "description":"success",
+                "example":{
+                    "message":"Successfully changed password."
+                }
+            },
+            400:{
+                "description": "Invalid credentials",
+                "example":{
+                    "message": "Invalid credentials",
+                }
+            },
+            404:{
+                "description":"user not found",
+                "example":{
+                    "message": "user not found",
+                }
+            }
+
+        }
+    )
     def put(self,request):
         tk = request.GET.get('token')
         try:
@@ -141,7 +197,7 @@ class changepassword_link(APIView):
         try:
             user = CustomUser.objects.get(id=payload['user_id'])
         except CustomUser.DoesNotExist:
-            return Response({"error": "user dosen\'t exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "user dosen\'t exist"}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(instance=user,data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -150,7 +206,7 @@ class changepassword_link(APIView):
             owner=user,
             role=user.Role,
             action="change_password",
-            details="Successfully changed password."
+            detail="Successfully changed password."
         )
         lg.save()
         return Response({'message':'password changed successfully'},status=status.HTTP_200_OK)
@@ -159,6 +215,26 @@ class Editprofile(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated,]
     serializer_class = UserEditProfileSerializer
     ALLOWED_FIELDS = {'email', 'phonenumber'}
+
+    @extend_schema(
+        request=UserEditProfileSerializer,
+        responses={
+            200: {
+                "description": "profile updated",
+                "example": {
+                    "message": "profile updated."
+                }
+            },
+            400: OpenApiResponse({
+                "description": "Invalid credentials",
+                "example": {
+                    "message": "missing data"
+                }
+            })
+        }
+    )
+    def patch(self,request):
+        return self.partial_update(request,partial=True)
     def update(self,request,*args,**kwargs):
         invalid = set(self.request.data.keys()) - self.ALLOWED_FIELDS
         if invalid:
@@ -166,7 +242,7 @@ class Editprofile(generics.UpdateAPIView):
                 {"error": f"Invalid fields: {', '.join(invalid)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        if not request.data:
+        if not request.data or None:
             return Response({"error": "missing data"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(instance=request.user,data=request.data,partial=True)
@@ -177,9 +253,10 @@ class Editprofile(generics.UpdateAPIView):
             owner=request.user,
             role=request.user.Role,
             action="editprofile",
-            details="Successfully edited profile.",
+            detail="Successfully edited profile.",
             value=serializer.data
         )
+        lg.save()
         return Response({'message': 'User profile updated',"new values":request.data},status=status.HTTP_200_OK)
 
 class profile_detail(generics.RetrieveAPIView):
@@ -205,7 +282,10 @@ class RefreshAPIView(APIView):
                 }
             },
             400: {
-                "description": "Invalid credentials"
+                "description": "Invalid credentials",
+                "example": {
+                    "message": "Invalid refresh token"
+                }
             }
         }
     )

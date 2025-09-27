@@ -8,12 +8,14 @@ from rest_framework import generics, permissions,status
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound, MethodNotAllowed
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 from .models import Requests
 from .serializers import RequestSerializer,RequestsupdateSerializer
 from allusers.permitions import StudentUser,AdminUser
 from room.models import Room
 from dormitory.models import dormitory
 from logs.models import Logs
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 # Create your views here.
 
 class RequestList(generics.ListAPIView):
@@ -35,7 +37,7 @@ class RequestCreate(generics.CreateAPIView):
             owner=self.request.user,
             role="student",
             action="create request",
-            details="Request created successfully",
+            detail="Request created successfully",
         )
         lg.save()
 
@@ -64,7 +66,7 @@ class RequestDelete(generics.DestroyAPIView):
             owner=self.request.user,
             role="student",
             action="delete request",
-            details=mes,
+            detail=mes,
             request=instance,
         )
         lg.save()
@@ -89,12 +91,24 @@ class RequestUpdate(generics.UpdateAPIView):
             owner=self.request.user,
             role="admin",
             action="update request",
-            details="Request updated successfully",
+            detail="Request updated successfully",
             request=instance,
         )
+        lg.save()
         return super().update(request, *args, **kwargs)
 
 # filter requests based on time,people,dormitory and status
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="f_type",
+            type=str,
+            location=OpenApiParameter.PATH,
+            description= "filter type: all, me, pending, accepted, rejected, roommates, week, month, semester, Dormitory name",
+        )
+    ],
+    responses=RequestSerializer(many=True),
+)
 class RequestFilter(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = RequestSerializer
@@ -102,7 +116,8 @@ class RequestFilter(generics.ListAPIView):
     def get_queryset(self):
         dor_name = ['Ghadir','Dabagh']
         user = self.request.user
-        student = user.student
+        if user.Role == "student":
+            student = user.student
         req = Requests.objects.for_user(self.request.user)
 
         filter_type = self.kwargs.get('f_type')
@@ -159,12 +174,12 @@ class RequestFilter(generics.ListAPIView):
             else:
                 req = req.none()
 
-        elif filter_type in dor_name and user.Role == "admin":
+        elif (filter_type in dor_name) and user.Role == "admin":
             try:
                 dor = dormitory.objects.get(name=filter_type)
-                room = Room.objects.filter(dormitory=dor)
-                req = Requests.objects.filter(room=room)
+                req = Requests.objects.filter(room__dormitory=dor)
             except dormitory.DoesNotExist:
-                return Response({"error": "Dormitory not found"})
-
+                raise ValidationError({"error": "Dormitory not found"})
+        else:
+            raise ValidationError({"error": "Filter not found"})
         return req

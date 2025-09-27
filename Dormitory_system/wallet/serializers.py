@@ -23,4 +23,7 @@ class IncreaseBalance(serializers.Serializer):
                 raise serializers.ValidationError("Balance cannot be negative")
             except Student.DoesNotExist:
                 raise serializers.ValidationError("Student does not exist")
+        if value > 100000:
+            raise serializers.ValidationError("you can not increase your balance more than 100000")
+
         return value

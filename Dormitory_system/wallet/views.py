@@ -2,8 +2,11 @@ import uuid
 from adodbapi.ado_consts import adModeRead
 from django.shortcuts import render
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema,OpenApiResponse,OpenApiTypes,OpenApiRequest,OpenApiExample
 from rest_framework.views import APIView
 from rest_framework import status,permissions,generics
+from scripts.regsetup import examples
+
 from .serializers import IncreaseBalance
 from .models import Wallet
 from allusers.models import CustomUser,D_Admin,Student
@@ -14,6 +17,32 @@ from logs.models import Logs
 class IncreaseBalanceAPIView(APIView):
     permission_classes = [StudentUser]
     serializer_class = IncreaseBalance
+    @extend_schema(
+        request=IncreaseBalance,
+        responses={
+            200:{
+                "description": "Increase balance",
+                "example": {
+                    "message": "Increase balance",
+                    "amount":1000,
+                    "balance":3000
+                }
+            },
+            400:{
+                "description": "Bad request",
+                "example": {
+                    "message": "balance must be an integer",
+                    "message2": "balance cannot be negative"
+                }
+            },
+            404:{
+                "description": "Not found",
+                "example":{
+                    "message":"wallet not found"
+                }
+            }
+        }
+    )
     def post(self,request):
         serializer = self.serializer_class(data=request.data,context={'request':request})
         serializer.is_valid(raise_exception=True)
@@ -35,7 +64,7 @@ class IncreaseBalanceAPIView(APIView):
             owner=request.user,
             role=request.user.Role,
             action="payment",
-            details="pending for charge balance",
+            detail="pending for charge balance",
             value=amount,
         )
         lg.save()
@@ -71,7 +100,23 @@ class IncreaseBalanceAPIView(APIView):
 
 class Balance(APIView):
     permission_classes = [StudentUser]
+    @extend_schema(
+        responses={
+            200: {
+                "description": "success",
+                "example": {
+                    "balance": 1000,
+                }
 
+            },
+            404:{
+                "description": "Wallet does not exist",
+                "example":{
+                    "message":"Wallet does not exist"
+                }
+            }
+        }
+    )
     def get(self,request):
         try:
             Stu = Student.objects.get(user=request.user)

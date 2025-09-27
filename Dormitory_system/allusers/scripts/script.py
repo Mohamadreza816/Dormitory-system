@@ -20,7 +20,7 @@ def run():
 
         lname = random.choice(last_names)
         national_number = str(1000000000 + i)
-        phone_number = str(f'0912{random.randint(100000, 999999)}')
+        phone_number = str(f'0912{random.randint(1000000, 9999999)}')
 
         if i % 2 == 0:
             role = "student"
