@@ -1,11 +1,9 @@
 import uuid
-from adodbapi.ado_consts import adModeRead
-from django.shortcuts import render
-from rest_framework.response import Response
+
 from drf_spectacular.utils import extend_schema,OpenApiResponse,OpenApiTypes,OpenApiRequest,OpenApiExample
 from rest_framework.views import APIView
 from rest_framework import status,permissions,generics
-from scripts.regsetup import examples
+from rest_framework.response import Response
 
 from .serializers import IncreaseBalance
 from .models import Wallet
