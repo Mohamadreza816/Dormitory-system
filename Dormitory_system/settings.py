@@ -116,11 +116,11 @@ import os
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME'   : os.getenv("DB_NAME", "myproject"),
-        'USER'   : os.getenv("DB_USER", "myproject"),
-        'PASSWORD': os.getenv("DB_PASSWORD", "myprojectpass"),
-        'HOST'   : os.getenv("DB_HOST", "dormitory-db"),
-        'PORT'   : os.getenv("DB_PORT", "5432"),
+        'NAME': 'DB_NAME',
+        'USER': 'DB_USER',
+        'PASSWORD': 'DB_PASSWORD',
+        'HOST': 'DB_HOST',
+        'PORT': '5432',
     }
 }
 
