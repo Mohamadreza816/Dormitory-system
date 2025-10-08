@@ -117,9 +117,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'DB_NAME',
-        'USER': 'DB_USER',
-        'PASSWORD': 'DB_PASSWORD',
-        'HOST': 'DB_HOST',
+        'USER': 'root',
+        'PASSWORD': 'UCv6BO8e7EezScyQ8Z56gW6r',
+        'HOST': 'dormitory-db',
         'PORT': '5432',
     }
 }
