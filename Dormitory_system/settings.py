@@ -106,23 +106,23 @@ WSGI_APPLICATION = 'Dormitory_system.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-# import os
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME'   : os.getenv("DB_NAME", "myproject"),
-#         'USER'   : os.getenv("DB_USER", "myproject"),
-#         'PASSWORD': os.getenv("DB_PASSWORD", "myprojectpass"),
-#         'HOST'   : os.getenv("DB_HOST", "dormitory-db"),
-#         'PORT'   : os.getenv("DB_PORT", "5432"),
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+import os
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME'   : os.getenv("DB_NAME", "myproject"),
+        'USER'   : os.getenv("DB_USER", "myproject"),
+        'PASSWORD': os.getenv("DB_PASSWORD", "myprojectpass"),
+        'HOST'   : os.getenv("DB_HOST", "dormitory-db"),
+        'PORT'   : os.getenv("DB_PORT", "5432"),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
