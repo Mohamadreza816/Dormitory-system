@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import UserLoginAPIView,create_link,changepassword_link,Editprofile,profile_detail,RefreshAPIView,logout
+from .views import UserLoginAPIView,create_link,changepassword_link,Editprofile,profile_detail,RefreshAPIView,logout,RefreshView
 urlpatterns = [
     path('login/',UserLoginAPIView.as_view()),
     path('create_link/',create_link.as_view()),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('profile_detail/',profile_detail.as_view()),
     path('newtoken/',RefreshAPIView.as_view()),
     path('logout/',logout.as_view()),
+    path('refresh/',RefreshView.as_view())
 ]
