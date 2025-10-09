@@ -299,3 +299,32 @@ class RefreshAPIView(APIView):
             return Response({'access_token': new_access_token},status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": "Invalid refresh token"}, status=400)
+
+
+class RefreshView(APIView):
+    @extend_schema(
+        responses={
+            200: {
+                "description": "new access token",
+                "example": {
+                    "message": "new access token generated.",
+                    "access": "your-access-token-here"
+                }
+            },
+            400: {
+                "description": "Invalid credentials"
+            }
+        }
+    )
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response({"error": "Refresh token is required"}, status=400)
+            refresh = RefreshToken(refresh_token)
+            new_access = str(refresh.access_token)
+
+            return Response({"message":"new access token generated","access": new_access}, status=200)
+
+        except Exception as e:
+            return Response({"error": "Invalid refresh token"}, status=400)
