@@ -301,30 +301,18 @@ class RefreshAPIView(APIView):
             return Response({"error": "Invalid refresh token"}, status=400)
 
 
-class RefreshView(APIView):
+
+class checklogin(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     @extend_schema(
         responses={
-            200: {
-                "description": "new access token",
-                "example": {
-                    "message": "new access token generated.",
-                    "access": "your-access-token-here"
-                }
-            },
-            400: {
-                "description": "Invalid credentials"
+            200 :{
+            "example":{
+                "message":"User logged in",
+                "user":"username"
+            }
             }
         }
     )
-    def post(self, request):
-        try:
-            refresh_token = request.data.get("refresh")
-            if not refresh_token:
-                return Response({"error": "Refresh token is required"}, status=400)
-            refresh = RefreshToken(refresh_token)
-            new_access = str(refresh.access_token)
-
-            return Response({"message":"new access token generated","access": new_access}, status=200)
-
-        except Exception as e:
-            return Response({"error": "Invalid refresh token"}, status=400)
+    def get(self, request):
+        return Response({"message": "User logged in","user":request.user.username}, status=200)
