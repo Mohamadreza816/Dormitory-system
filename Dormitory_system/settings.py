@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'wallet',
     'transaction',
     'request',
+    'corsheaders',
     'allusers',
     'logs'
 ]
@@ -71,8 +72,11 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
