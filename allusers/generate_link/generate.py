@@ -13,7 +13,7 @@ def generate_magic_link_token(user):
     return token
 
 def send_email(token,user):
-    link = f"http://127.0.0.1:8000/users/changepassword_link/?token={token}"
+    link = f"https://dormitory.liara.run/users/changepassword_link/?token={token}"
     send_mail(
         "لینک ورود",
         f"برای ورود کلیک کن: {link}",
