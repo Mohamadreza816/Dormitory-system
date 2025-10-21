@@ -9,13 +9,14 @@ from logs.models import Logs
 class RequestSerializer(serializers.ModelSerializer):
     stu_firstname = serializers.SerializerMethodField()
     stu_lastname = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
     dor_name = serializers.SerializerMethodField()
     dor_blk = serializers.SerializerMethodField()
     room_num = serializers.SerializerMethodField()
     created_date = serializers.SerializerMethodField()
     class Meta:
         model = Requests
-        fields = ['id','r_type','stu_firstname','stu_lastname','dor_name','dor_blk','room_num','created_date','description','status','is_priorty','comment']
+        fields = ['id','r_type','stu_firstname','stu_lastname','username','dor_name','dor_blk','room_num','created_date','description','status','is_priorty','comment']
         read_only_fields = ['id','stu_firstname','stu_lastname','dor_name','dor_blk','room_num','created_date','comment','status']
 
     def validate(self, data):
@@ -98,6 +99,10 @@ class RequestSerializer(serializers.ModelSerializer):
 
     def get_created_date(self,obj):
         return obj.created_at.date()
+
+    def get_username(self,obj):
+        stu = obj.student
+        return stu.student_number
 
     def create(self,validated_data):
         user = self.context['request'].user
