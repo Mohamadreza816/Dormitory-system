@@ -23,7 +23,11 @@ class RequestList(generics.ListAPIView):
     serializer_class = RequestSerializer
 
     def get_queryset(self):
-        queryset = Requests.objects.for_user(self.request.user)
+        student = self.request.user.student
+        if self.request.user.Role == 'Admin':
+            queryset = Requests.objects.for_user(self.request.user)
+            return queryset
+        queryset = Requests.objects.filter(room=student.room)
         return queryset
 
 # create student [only students]

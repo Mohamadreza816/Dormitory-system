@@ -59,7 +59,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['first_name','last_name','Role','phonenumber','email','National_number','dor_name','dor_blk','room_num']
+        fields = ['first_name','last_name','username','Role','phonenumber','email','National_number','dor_name','dor_blk','room_num']
 
     def get_dor_name(self,obj):
         try:
