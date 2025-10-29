@@ -5,5 +5,5 @@ class RequestQuerySet(models.QuerySet):
         if user.Role.lower() == "admin":
             return self.all()
         elif user.Role.lower() == "student":
-            return self.filter(student=user.student)
+            return self.filter(student=user.student).order_by("created_at")
         return self.none

@@ -13,11 +13,11 @@ class RequestSerializer(serializers.ModelSerializer):
     dor_name = serializers.SerializerMethodField()
     dor_blk = serializers.SerializerMethodField()
     room_num = serializers.SerializerMethodField()
-    created_date = serializers.SerializerMethodField()
+    # created_date = serializers.SerializerMethodField()
     class Meta:
         model = Requests
-        fields = ['id','r_type','stu_firstname','stu_lastname','username','dor_name','dor_blk','room_num','created_date','description','status','is_priorty','comment']
-        read_only_fields = ['id','stu_firstname','stu_lastname','dor_name','dor_blk','room_num','created_date','comment','status']
+        fields = ['id','r_type','stu_firstname','stu_lastname','username','dor_name','dor_blk','room_num','created_at','description','status','is_priorty','comment']
+        read_only_fields = ['id','stu_firstname','stu_lastname','dor_name','dor_blk','room_num','created_at','comment','status']
 
     def validate(self, data):
         if not data.get('r_type'):
@@ -97,8 +97,8 @@ class RequestSerializer(serializers.ModelSerializer):
         return room.room_number
 
 
-    def get_created_date(self,obj):
-        return obj.created_at.date()
+    # def get_created_date(self,obj):
+    #     return obj.created_at.date()
 
     def get_username(self,obj):
         stu = obj.student
