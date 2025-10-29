@@ -27,6 +27,7 @@ urlpatterns = [
     path("users/",include('wallet.urls')),
     path("users/",include('transaction.urls')),
     path("request/",include('request.urls')),
+    path('dormitory/',include('dormitory.urls')),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     # Redoc UI
