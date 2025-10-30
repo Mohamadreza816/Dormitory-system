@@ -30,7 +30,7 @@ def create_related_model(sender,instance,created,**kwargs):
             instance.save()
         elif instance.Role.lower() == "student" and instance.user_Gender == "m":
             temp = dormitory.objects.filter(Gender="M")
-            empty_room = Room.objects.filter(is_full=False).order_by("-used")
+            empty_room = Room.objects.filter(is_full=False).order_by("room_number")
 
             student_room = ...
             for room in empty_room:
@@ -52,7 +52,7 @@ def create_related_model(sender,instance,created,**kwargs):
             instance.save()
         elif instance.Role.lower() == "student" and instance.user_Gender == "f":
             temp = dormitory.objects.filter(Gender="F")
-            empty_room = Room.objects.filter(is_full=False).order_by("-used")
+            empty_room = Room.objects.filter(is_full=False).order_by("room_number")
 
             student_room = ...
             for room in empty_room:
