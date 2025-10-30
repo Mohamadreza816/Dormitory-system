@@ -30,19 +30,17 @@ def create_related_model(sender,instance,created,**kwargs):
             instance.save()
         elif instance.Role.lower() == "student" and instance.user_Gender == "m":
             temp = dormitory.objects.filter(Gender="M")
-            empty_room = Room.objects.filter(is_full=False)
+            empty_room = Room.objects.filter(is_full=False).order_by("-used")
 
             student_room = ...
             for room in empty_room:
-                if room.dormitory in temp:
-                    room.used = room.used + 1
+                if room.used < room.capacity:
+                    room.used += 1
                     student_room = room
+                    if room.used == room.capacity:
+                        room.is_full = True
                     room.save()
                     break
-
-            if student_room.used == student_room.capacity:
-                student_room.is_full = True
-                student_room.save()
 
             obj = Student.objects.create(
                 user=instance,
@@ -54,19 +52,17 @@ def create_related_model(sender,instance,created,**kwargs):
             instance.save()
         elif instance.Role.lower() == "student" and instance.user_Gender == "f":
             temp = dormitory.objects.filter(Gender="F")
-            empty_room = Room.objects.filter(is_full=False)
+            empty_room = Room.objects.filter(is_full=False).order_by("-used")
 
             student_room = ...
             for room in empty_room:
-                if room.dormitory in temp:
-                    room.used = room.used+1
+                if room.used < room.capacity:
+                    room.used += 1
                     student_room = room
+                    if room.used == room.capacity:
+                        room.is_full = True
                     room.save()
                     break
-
-            if student_room.used == student_room.capacity:
-                student_room.is_full = True
-                student_room.save()
 
             obj = Student.objects.create(
                 user=instance,
