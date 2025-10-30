@@ -7,8 +7,8 @@ from wallet.signals import *
 
 def run():
 
-    first_names = [("Ali","m"), ("Sara","f"), ("Reza","m"), ("Maryam","f"), ("Hossein","m"), ("Fatemeh","f"), ("Amir","m"), ("Niloofar","f"), ("Mahdi","m"), ("Arezoo","f")]
-    last_names = ["Ahmadi", "Hosseini", "Karimi", "Moradi", "Jafari", "Rahimi", "Ebrahimi", "Shirazi", "Kazemi", "Farhadi"]
+    first_names = [("علی","m"), ("سارا","f"), ("رضا","m"), ("مریم","f"), ("حسین","m"), ("فاطمه","f"), ("امیر","m"), ("نیلوفر","f"), ("مهدی","m"), ("آرزو","f")]
+    last_names = ["احمدی", "حسینی", "کریمی", "مرادی", "جعفری", "رحیمی", "ابراهیمی", "شیرازی", "کاظمی", "فرهادی"]
 
     for i in range(1, 21):
         fname = random.choice(first_names)

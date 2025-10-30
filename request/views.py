@@ -119,7 +119,7 @@ class RequestFilter(generics.ListAPIView):
     serializer_class = RequestSerializer
 
     def get_queryset(self):
-        dor_name = ['Ghadir','Dabagh']
+        dor_name = ['غدیر','ذباغ']
         user = self.request.user
         if user.Role == "student":
             student = user.student

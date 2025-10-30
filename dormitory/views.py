@@ -17,7 +17,7 @@ class dormitoryname(APIView):
             200: {
                 "description": "return name of dormitory",
                 "example": {
-                    "name": "ghadir",
+                    "name": "غدیر",
                     "Gender": "Male"
                 }
             }

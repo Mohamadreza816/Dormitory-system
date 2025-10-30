@@ -13,7 +13,6 @@ study_field = [
     "Physics",
     "Chemistry",
     "Biology",
-    "Unset"
 ]
 admin_lev = [
     1,2,3
