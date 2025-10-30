@@ -34,7 +34,7 @@ def create_related_model(sender,instance,created,**kwargs):
 
             student_room = ...
             for room in empty_room:
-                if room.used < room.capacity:
+                if room.used < room.capacity and room.dormitory in temp:
                     room.used += 1
                     student_room = room
                     if room.used == room.capacity:
@@ -56,7 +56,7 @@ def create_related_model(sender,instance,created,**kwargs):
 
             student_room = ...
             for room in empty_room:
-                if room.used < room.capacity:
+                if room.used < room.capacity and room.dormitory in temp:
                     room.used += 1
                     student_room = room
                     if room.used == room.capacity:
